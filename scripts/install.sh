@@ -22,9 +22,9 @@ sudo cp ../lib/etc/modprobe.d/modprobe.conf /etc/modprobe.d/modprob.conf
 sudo cp ../lib/etc/rc.local /etc/rc.local
 
 echo "Network configuration"
-echo "Type 's' to setup rPi as a dhcp-server and enable NAT/DNS forwarding."
+echo "Setup rPi as a dhcp-server and enable NAT/DNS forwarding?"
 echo "  Conventient if you are connecting directly from a PC and want to use" 
-echo "  the rPi as a router."
+echo "  the rPi as a router. Y/N: "
 read nw
 if [ "$nw" = "s" ] || [ "$nw" = "S" ]; then
     echo "Setting up dnsmasq and nat forwarding"
@@ -46,10 +46,23 @@ if [ "$nw" = "s" ] || [ "$nw" = "S" ]; then
     sudo /etc/init.d/forward-nat start
     
 else
-    echo "Setting up dhcp client"
-    sudo cp ../lib/etc/interfaces.client /etc/network/interfaces
+    echo "Set configure eth0 as dhcp client? Y/N: "
+    read query
+    if [ "$query" = "y" ] || [ "$query" = "Y"]; then
+	echo "Setting up dhcp client"
+	sudo cp ../lib/etc/interfaces.client /etc/network/interfaces
+    else
+	echo "Network configuration untouched"
+    fi
 fi
 
 echo "Setting up Huawei 3G modem"
 # the settings in /etc/module will automatically initiate a mode switch for Huawei E3131 dongle
 sudo apt-get install usb-modeswitch
+
+# mount usb (first connected) to ~/bats/out
+sudo apt-get install usbmount
+USBMP=`sudo grep -c "/home/pi/bats/out" /etc/fstab`
+if [ $USBMP -eq 0 ]; then
+    sudo bash -c 'echo "/dev/sda /home/pi/bats/out auto rw 0 0" >> /etc/fstab'
+fi
